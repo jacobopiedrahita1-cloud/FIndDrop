@@ -57,8 +57,57 @@
       (opts.vt ? ' style="view-transition-name:' + opts.vt + '"' : '') + '>';
   }
 
-  function priceHtml(p) {
-    return '<span class="price" data-price="' + p.slug + '">' + t(state.shop[p.slug] && state.shop[p.slug].price || p.price) + '</span>';
+  function money(n, currency) {
+    if (isDato(n)) return t(n);
+    try {
+      return esc(new Intl.NumberFormat('es-CO', { style: 'currency', currency: currency || 'COP', maximumFractionDigits: n % 1 ? 2 : 0 }).format(n));
+    } catch (e) { return esc(n + ' ' + currency); }
+  }
+
+  // Precio actual, precio anterior tachado y ahorro. Usa los de Shopify cuando ya llegaron.
+  function priceHtml(p, compact) {
+    var shop = state.shop[p.slug] || {};
+    var amount = shop.amount != null ? shop.amount : p.price;
+    var before = shop.amount != null ? shop.compareAt : p.compareAt;
+    var cur = shop.currency || p.currency;
+    var sale = typeof amount === 'number' && typeof before === 'number' && before > amount;
+    return '<span class="price-block' + (compact ? ' price-block--compact' : '') + '" data-price="' + p.slug + '"' + (compact ? ' data-compact' : '') + '>' +
+      (sale ? '<s class="price-old"><span class="visually-hidden">Antes </span>' + money(before, cur) + '</s>' : '') +
+      '<span class="price"><span class="visually-hidden">' + (sale ? 'Ahora ' : 'Precio ') + '</span>' + money(amount, cur) + '</span>' +
+      (sale && !compact ? '<span class="save">Ahorra ' + money(before - amount, cur) + '</span>' : '') +
+    '</span>';
+  }
+
+  function refreshPrices(slug) {
+    var p = findProduct(slug);
+    document.querySelectorAll('[data-price="' + slug + '"]').forEach(function (el) {
+      el.outerHTML = priceHtml(p, el.hasAttribute('data-compact'));
+    });
+  }
+
+  /* ---------- escenario del producto: frasco con gomitas flotando ----------
+     Capa de atrás: gomitas pequeñas y difuminadas. Capa de adelante: nítidas.
+     [x %, y %, ancho %, rotación, profundidad] — la profundidad negativa se mueve al revés. */
+  var GUMMIES = {
+    back: [[10, 14, 14, -18, -0.5], [76, 6, 11, 24, -0.6], [84, 58, 13, -8, -0.45], [4, 62, 10, 32, -0.55]],
+    front: [[-3, 56, 21, 14, 1.3], [80, 76, 17, -22, 1.5], [68, -2, 12, 8, 1.1]]
+  };
+
+  function stage(p, opts) {
+    var g = p.images.gummy;
+    function layer(list, name) {
+      return '<div class="stage__layer stage__layer--' + name + '" aria-hidden="true">' + list.map(function (v, i) {
+        return '<span class="stage__g" data-g="' + v[4] + '" style="left:' + v[0] + '%;top:' + v[1] + '%;width:' + v[2] + '%">' +
+          '<span class="stage__float" style="--r:' + v[3] + 'deg;--d:' + (5.5 + i * 1.4).toFixed(1) + 's;--delay:-' + (i * 1.9).toFixed(1) + 's">' +
+          '<img src="' + assetUrl(g.src) + '" width="' + g.w + '" height="' + g.h + '" alt=""' + (opts.eager ? '' : ' loading="lazy"') + ' decoding="async">' +
+          '</span></span>';
+      }).join('') + '</div>';
+    }
+    return '<div class="stage stage--' + opts.size + '" data-stage>' +
+      layer(GUMMIES.back, 'back') +
+      '<div class="stage__jar">' + img(p.images.jar, { eager: opts.eager, cls: opts.cls, vt: 'product-' + p.slug }) + '</div>' +
+      layer(GUMMIES.front, 'front') +
+    '</div>';
   }
 
   function buyBtn(p, label, extra) {
@@ -156,7 +205,7 @@
         '<a class="card__link" href="#/' + p.slug + '">' +
           '<div class="card__media">' + stars(14, p.slug.length) +
             (isFeatured ? '<span class="tag">Hallazgo de la semana</span>' : '') +
-            img(p.images.jar, { cls: 'card__img', vt: 'product-' + p.slug, eager: isFeatured }) +
+            stage(p, { size: 'card', cls: 'card__img', eager: isFeatured }) +
           '</div>' +
           '<div class="card__body">' +
             '<h3 class="card__title">' + esc(p.name) + '</h3>' +
@@ -228,9 +277,7 @@
           '</div>' +
           '<div class="p-hero__media">' +
             '<div class="p-hero__halo" aria-hidden="true"></div>' +
-            img(p.images.jar, { eager: true, cls: 'p-hero__jar', vt: 'product-' + p.slug }) +
-            '<span class="float float--hero-gummy" data-depth="-0.16" aria-hidden="true"><span class="float__in" style="--d:7s">' +
-              img(p.images.gummy, { alt: '', eager: true }) + '</span></span>' +
+            stage(p, { size: 'hero', cls: 'p-hero__jar', eager: true }) +
           '</div>' +
           '<div class="p-hero__body">' +
             '<p class="lead reveal" style="--i:3">' + t(s.hero.text) + '</p>' +
@@ -316,9 +363,20 @@
             return '<li>' + icon('i-check') + esc(b) + '</li>';
           }).join('') + '</ul>' +
           '<div class="ing__grid">' +
-            '<ul class="ing">' + s.ingredients.items.map(function (it, i) {
-              return '<li class="reveal" style="--i:' + (i + 2) + '"><span class="ing__name">' + esc(it.name) + '</span><span class="ing__amt">' + t(it.amount) + '</span></li>';
-            }).join('') + '</ul>' +
+            '<div class="ing__col">' +
+              '<div class="nutri reveal" style="--i:2">' +
+                '<h3 class="nutri__title">' + esc(s.ingredients.nutritionTitle) + '</h3>' +
+                '<p class="nutri__serving">' + esc(s.ingredients.serving) + '</p>' +
+                '<dl>' + s.ingredients.nutrition.map(function (n) {
+                  return '<div><dt>' + esc(n.label) + (n.note ? '<small>' + esc(n.note) + '</small>' : '') + '</dt><dd>' + t(n.value) + '</dd></div>';
+                }).join('') + '</dl>' +
+              '</div>' +
+              '<div class="blend reveal" style="--i:3">' +
+                '<h3 class="nutri__title">' + esc(s.ingredients.blendTitle) + '</h3>' +
+                '<ul>' + s.ingredients.blend.map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('') + '</ul>' +
+                '<p class="blend__note">' + t(s.ingredients.blendNote) + '</p>' +
+              '</div>' +
+            '</div>' +
             '<dl class="details">' + s.ingredients.details.map(function (d, i) {
               return '<div class="reveal" style="--i:' + (i + 2) + '"><dt>' + esc(d.label) + '</dt><dd>' + t(d.value) + '</dd></div>';
             }).join('') + '</dl>' +
@@ -414,6 +472,68 @@
     parallaxEls = reduceMotion.matches ? [] : Array.prototype.slice.call(app.querySelectorAll('[data-depth]'));
   }
 
+  /* Inclinación 3D del frasco.
+     Mouse: sigue el puntero dentro del escenario. Táctil: se inclina un poco con el scroll.
+     El valor se suaviza hacia el objetivo cada cuadro, así un cambio a mitad de camino no salta. */
+  var finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+  var stages = [];
+
+  function setupStages() {
+    stages = [];
+    if (reduceMotion.matches) return;
+    app.querySelectorAll('[data-stage]').forEach(function (el) {
+      var st = {
+        el: el, jar: el.querySelector('.stage__jar'),
+        gs: Array.prototype.slice.call(el.querySelectorAll('.stage__g')),
+        max: el.classList.contains('stage--hero') ? 13 : 10,
+        x: 0, y: 0, tx: 0, ty: 0, raf: 0, last: 0
+      };
+      if (finePointer.matches) {
+        var host = el.closest('.card__link') || el.parentNode;
+        host.addEventListener('pointermove', function (e) {
+          var r = el.getBoundingClientRect();
+          st.tx = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1));
+          st.ty = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height) * 2 - 1));
+          kick(st);
+        });
+        host.addEventListener('pointerleave', function () { st.tx = 0; st.ty = 0; kick(st); });
+      }
+      stages.push(st);
+    });
+    cleanups.push(function () { stages.forEach(function (st) { cancelAnimationFrame(st.raf); }); stages = []; });
+  }
+
+  function kick(st) {
+    if (st.raf) return;
+    st.last = performance.now();
+    st.raf = requestAnimationFrame(function step(now) {
+      var k = 1 - Math.exp(-(now - st.last) / 110); // ~110 ms de constante: rápido pero suave
+      st.last = now;
+      st.x += (st.tx - st.x) * k;
+      st.y += (st.ty - st.y) * k;
+      var rest = Math.abs(st.tx - st.x) < 0.002 && Math.abs(st.ty - st.y) < 0.002;
+      if (rest) { st.x = st.tx; st.y = st.ty; }
+      st.jar.style.transform = 'perspective(900px) rotateX(' + (-st.y * st.max).toFixed(2) + 'deg) rotateY(' + (st.x * st.max).toFixed(2) + 'deg)';
+      for (var i = 0; i < st.gs.length; i++) {
+        var d = +st.gs[i].getAttribute('data-g') * 16;
+        st.gs[i].style.transform = 'translate3d(' + (st.x * d).toFixed(1) + 'px,' + (st.y * d).toFixed(1) + 'px,0)';
+      }
+      st.raf = rest ? 0 : requestAnimationFrame(step);
+    });
+  }
+
+  function scrollStages(vh) {
+    if (finePointer.matches) return;
+    for (var i = 0; i < stages.length; i++) {
+      var r = stages[i].el.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > vh) continue;
+      var pos = Math.max(-1, Math.min(1, ((r.top + r.height / 2) / vh) * 2 - 1));
+      stages[i].ty = pos * 0.55;
+      stages[i].tx = pos * -0.3;
+      kick(stages[i]);
+    }
+  }
+
   var ticking = false;
   function onScroll() {
     if (ticking) return;
@@ -427,6 +547,7 @@
           parallaxEls[i].style.transform = 'translate3d(0,' + (y * +parallaxEls[i].getAttribute('data-depth')).toFixed(1) + 'px,0)';
         }
       }
+      scrollStages(vh);
       if (state.view === 'product') {
         var max = document.documentElement.scrollHeight - vh;
         progressBar.style.transform = 'scaleX(' + (max > 0 ? Math.min(1, y / max) : 0).toFixed(4) + ')';
@@ -437,7 +558,7 @@
   // Barra de compra fija: aparece al pasar el hero, se oculta en la oferta y el cierre.
   function setupBuybar(p) {
     buybar.innerHTML = '<div class="buybar__inner"><div class="buybar__info"><span class="buybar__name">' + esc(p.name) + '</span>' +
-      priceHtml(p) + '</div>' + buyBtn(p, p.cta, 'btn--sm') + '</div>';
+      priceHtml(p, true) + '</div>' + buyBtn(p, p.cta, 'btn--sm') + '</div>';
     if (!('IntersectionObserver' in window)) return;
     var hero = document.getElementById('p-hero');
     var hiders = [document.getElementById('oferta'), document.getElementById('final')];
@@ -473,27 +594,21 @@
     });
   }
 
-  function formatMoney(m) {
-    var n = parseFloat(m.amount);
-    try {
-      return new Intl.NumberFormat('es', {
-        style: 'currency', currency: m.currencyCode,
-        minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: n % 1 ? 2 : 0
-      }).format(n);
-    } catch (e) { return m.amount + ' ' + m.currencyCode; }
-  }
-
   function loadShopify() {
     DATA.products.forEach(function (p) {
       if (!p.shopifyHandle || isDato(p.shopifyHandle) || !DATA.shopify.storefrontToken) return;
       storefront(
-        'query($h:String!){product(handle:$h){availableForSale variants(first:1){nodes{id availableForSale price{amount currencyCode}}}}}',
+        'query($h:String!){product(handle:$h){availableForSale variants(first:1){nodes{id availableForSale price{amount currencyCode} compareAtPrice{amount}}}}}',
         { h: p.shopifyHandle }
       ).then(function (d) {
         var v = d.product && d.product.variants.nodes[0];
         if (!v) return;
-        state.shop[p.slug] = { variantId: v.id, price: formatMoney(v.price), available: v.availableForSale };
-        document.querySelectorAll('[data-price="' + p.slug + '"]').forEach(function (el) { el.textContent = state.shop[p.slug].price; });
+        state.shop[p.slug] = {
+          variantId: v.id, available: v.availableForSale,
+          amount: parseFloat(v.price.amount), currency: v.price.currencyCode,
+          compareAt: v.compareAtPrice ? parseFloat(v.compareAtPrice.amount) : null
+        };
+        refreshPrices(p.slug);
         if (!v.availableForSale) markSoldOut(p.slug);
       }).catch(function (e) { console.warn('[FindDrop] Shopify:', e.message); });
     });
@@ -590,6 +705,7 @@
     setupReveal();
     setupCounters();
     setupParallax();
+    setupStages();
     onScroll();
 
     if (opts.focus) {

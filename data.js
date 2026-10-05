@@ -72,8 +72,11 @@ window.FINDDROP = {
       slug: 'lullabites',
       name: 'LullaBites',
       short: 'Gomitas de fresa sin melatonina para tu ritual de noche.',
-      // Se reemplaza solo con el precio de Shopify si `shopifyHandle` está completo.
-      price: '[DATO: precio]',
+      // Precios en pesos colombianos, sin puntos. Si `shopifyHandle` está completo,
+      // se usan el precio y el "precio de comparación" configurados en Shopify.
+      price: 79900,
+      compareAt: 99900, // precio anterior (tachado). Pon null si no hay descuento.
+      currency: 'COP',
       shopifyHandle: '[DATO: handle del producto en Shopify, ej. lullabites]',
       // Respaldo si no usas Shopify: enlace de pago o WhatsApp,
       // ej. https://wa.me/573001234567?text=Hola,%20quiero%20LullaBites
@@ -104,9 +107,9 @@ window.FINDDROP = {
         },
         concept: {
           eyebrow: 'El giro',
-          titleThin: 'Una nana',
+          titleThin: 'Un ritual',
           titleBold: 'que se mastica',
-          text: 'Lullaby significa nana: la canción que le avisa al cuerpo que ya es hora. LullaBites toma esa idea y la vuelve un ritual de noche, sin melatonina.',
+          text: 'LullaBites convierte el final del día en un ritual corto y fácil de repetir: sin melatonina y con sabor suave a fresa.',
           ritual: [
             { title: 'Baja la luz', text: 'La señal de que el día terminó.' },
             { title: 'Una porción', text: 'Sabor suave a fresa.' },
@@ -147,15 +150,21 @@ window.FINDDROP = {
         ingredients: {
           eyebrow: 'Lo que lleva',
           title: 'Ingredientes y detalles.',
-          items: [
-            { name: '5-HTP', amount: '[DATO: cantidad por porción]' },
-            { name: 'L-teanina', amount: '[DATO: cantidad por porción]' },
-            { name: 'Magnesio', amount: '[DATO: cantidad por porción]' },
-            { name: 'Raíz de valeriana', amount: '[DATO: cantidad por porción]' },
-            { name: 'Pasiflora', amount: '[DATO: cantidad por porción]' }
+          nutritionTitle: 'Información nutricional',
+          serving: 'Por porción (2 gomitas)',
+          nutrition: [
+            { label: 'Calorías', value: '10 kcal' },
+            { label: 'Carbohidratos totales', value: '5 g' },
+            { label: 'Azúcares totales', value: '0 g' },
+            { label: 'Sodio', value: '3 mg' },
+            { label: 'Magnesio (como glicinato de magnesio)', value: '350 mg', note: '83 % del valor diario aprox.' }
           ],
+          blendTitle: 'Mezcla de hierbas y aminoácidos',
+          blend: ['L-teanina', '5-HTP (5-hidroxitriptófano)', 'Extracto de raíz de valeriana', 'Extracto de pasiflora'],
+          blendNote: 'Es una fórmula patentada: el fabricante no publica la cantidad de cada uno.',
           badges: ['Sin melatonina', 'Vegana', 'Sin azúcar', 'Sin gluten', 'Apta halal'],
           details: [
+            { label: 'Otros ingredientes', value: '[DATO: lista de "Other ingredients" tal como aparece en la etiqueta]' },
             { label: 'Registro sanitario', value: '[DATO: número de registro sanitario]' },
             { label: 'Fabricante / origen', value: '[DATO: fabricante y país de origen]' },
             { label: 'Advertencias de la etiqueta', value: '[DATO: advertencias tal como aparecen en la etiqueta]' }
