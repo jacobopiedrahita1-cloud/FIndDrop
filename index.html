@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>FindDrop · Un hallazgo por semana</title>
+<meta name="description" content="FindDrop: encuentra algo bueno cada semana. Un solo producto elegido y probado, explicado sin rodeos." />
+<meta name="theme-color" content="#2A1B3D" />
+<meta property="og:title" content="FindDrop · Un hallazgo por semana" />
+<meta property="og:description" content="Encuentra algo bueno cada semana." />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="assets/og-finddrop.jpg" />
+<link rel="icon" type="image/png" href="assets/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;600&display=swap" rel="stylesheet" />
+<link rel="preload" as="image" href="assets/lullabites-frasco.webp" type="image/webp" />
+<link rel="stylesheet" href="styles.css" />
+<script>document.documentElement.classList.add('js');</script>
+<!--
+  IMPORTANTE: antes de publicar, verifica el registro sanitario del producto
+  según el país (INVIMA, COFEPRIS, ANMAT u otro) y complétalo en data.js.
+-->
+</head>
+<body>
+<!-- Íconos reutilizables -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-drop" viewBox="0 0 100 132">
+    <path fill-rule="evenodd" d="M50 0C38 14 6 52 6 88a44 44 0 0 0 88 0C94 52 62 14 50 0ZM32 88a18 18 0 1 0 36 0a18 18 0 1 0-36 0Z" />
+  </symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24">
+    <path d="M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z" />
+  </symbol>
+  <symbol id="i-moon" viewBox="0 0 100 100">
+    <path d="M47.89 10.05A40 40 0 1 0 87.1 64.94A34 34 0 1 1 47.89 10.05Z" />
+  </symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24">
+    <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="i-down" viewBox="0 0 24 24">
+    <path d="M12 5v14M6 13l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="i-back" viewBox="0 0 24 24">
+    <path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="i-check" viewBox="0 0 24 24">
+    <path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+  </symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24">
+    <path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+  </symbol>
+</svg>
+
+<a class="skip-link" href="#app">Saltar al contenido</a>
+<div class="progress" aria-hidden="true"><span id="progress-bar"></span></div>
+
+<header class="site-header">
+  <div class="wrap site-header__inner">
+    <a class="logo" href="#/" aria-label="FindDrop, ir a la tienda">
+      <svg class="logo__drop" aria-hidden="true"><use href="#i-drop" /></svg>
+      <span class="logo__word" aria-hidden="true"><span class="thin">Find</span><b>Drop</b></span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Principal"></nav>
+  </div>
+</header>
+
+<main id="app" tabindex="-1"></main>
+
+<footer class="site-footer" id="footer"></footer>
+
+<div class="buybar" id="buybar" aria-hidden="true"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<noscript>
+  <p class="noscript">Activa JavaScript para ver la tienda de FindDrop.</p>
+</noscript>
+
+<script src="data.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>
