@@ -1,0 +1,36 @@
+# Regenera el tema de Shopify y lo publica en la rama `shopify-theme`.
+# Esa rama es la que se conecta en Shopify > Tienda online > Temas > Agregar tema > Conectar desde GitHub.
+# Edita siempre en `main` (data.js, app.js, styles.css, index.html, assets/): esta rama se sobrescribe sola.
+name: Tema de Shopify
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: shopify-theme
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generar tema
+        run: python3 shopify/build_theme.py
+      - name: Publicar en la rama shopify-theme
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: shopify-theme
+          publish_dir: ./dist/theme
+          force_orphan: true
+          enable_jekyll: true
+          commit_message: 'Tema generado desde'

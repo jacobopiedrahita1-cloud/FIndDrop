@@ -15,7 +15,13 @@ Si no usas Shopify, completa `buyUrl` con un enlace de pago o de WhatsApp.
 
 El Admin API token (`shpat_...`) **no** debe ir nunca en este código.
 
-## Subir a Shopify como tema
+## Conectar Shopify con GitHub
+La rama `shopify-theme` contiene el tema listo (se regenera sola con cada cambio en `main`
+gracias a `.github/workflows/shopify-theme.yml`).
+En Shopify: Tienda online > Temas > Agregar tema > Conectar desde GitHub > repo FIndDrop > rama `shopify-theme`.
+Edita siempre en `main`; los cambios hechos directamente en `shopify-theme` se pierden en la siguiente actualización.
+
+## Subir a Shopify como tema (ZIP)
 `dist/finddrop-theme.zip` es el mismo sitio empaquetado como tema de Shopify.
 En Shopify: Tienda online > Temas > Agregar tema > Subir archivo .zip. Queda sin publicar:
 usa "Vista previa" y, si todo se ve bien, "Publicar".
