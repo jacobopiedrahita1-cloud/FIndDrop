@@ -660,3 +660,8 @@ body:not([data-view="product"]) .progress { display: none; }
 .diag__row--warn .diag__mark { background: var(--coral); color: var(--night); }
 .diag__row--bad .diag__mark { background: var(--pink); }
 .diag__help { margin-top: 20px; color: var(--purple); font-size: .95rem; }
+
+/* ---------- reseñas de Judge.me ---------- */
+.reviews { padding-top: 0; }
+.reviews__slot { margin-top: 24px; }
+.reviews .jdgm-widget { font-family: var(--font); color: var(--night); }

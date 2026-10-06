@@ -33,6 +33,11 @@ def layout():
     sprite, spa = body[:sprite_end], body[sprite_end:]
     scripts_at = spa.index('<script src=')
     spa_markup, spa_scripts = spa[:scripts_at], spa[scripts_at:]
+    # Reseñas de Judge.me del producto destacado: se cargan con la página (para que Judge.me
+    # las inicialice) y app.js las mueve a la sección de reseñas de #/lullabites.
+    reviews = ("{%- assign fd_product = all_products['lullabites'] -%}\n"
+               "{%- if fd_product.id -%}<div id=\"fd-reviews-holder\" hidden>"
+               "{% render 'judgeme-widget', product: fd_product %}</div>{%- endif -%}\n")
     base = "<script>window.FINDDROP_ASSET_BASE = {{ 'favicon.png' | asset_url | split: 'favicon.png' | first | json }};</script>\n"
 
     other = '''<header class="site-header">
@@ -52,7 +57,7 @@ def layout():
 <footer class="site-footer"><div class="wrap footer__bottom"><span>© {{ 'now' | date: '%Y' }} FindDrop</span><span>Un hallazgo por semana</span></div></footer>
 '''
     return (head + '<body>' + sprite +
-            "{%- if template.name == 'index' -%}\n" + spa_markup + '{{ content_for_layout }}\n' + base + spa_scripts +
+            "{%- if template.name == 'index' -%}\n" + spa_markup + reviews + '{{ content_for_layout }}\n' + base + spa_scripts +
             '{%- else -%}\n' + other + '{%- endif -%}\n</body>' + tail)
 
 

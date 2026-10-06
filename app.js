@@ -109,6 +109,15 @@
     return d > 0 ? d + ' d ' + h + ' h ' + two(m) + ' min' : h + ' h ' + two(m) + ' min ' + two(sec) + ' s';
   }
 
+  // Mueve el widget de Judge.me (ya cargado con la página) a la sección de reseñas y lo devuelve al salir.
+  function mountReviews() {
+    var holder = document.getElementById('fd-reviews-holder');
+    var slot = document.getElementById('reviews-slot');
+    if (!holder || !slot) return;
+    while (holder.firstChild) slot.appendChild(holder.firstChild);
+    cleanups.push(function () { while (slot.firstChild) holder.appendChild(slot.firstChild); });
+  }
+
   function setupCountdowns() {
     if (!app.querySelector('[data-countdown]')) return;
     var timer = setInterval(function () {
@@ -453,6 +462,16 @@
           '</div>' +
         '</div>' +
       '</section>' +
+
+      // Reseñas reales de Judge.me: solo existe dentro del tema de Shopify.
+      (document.getElementById('fd-reviews-holder') ?
+      '<section class="sec sec--light reviews" aria-labelledby="reviews-title">' +
+        '<div class="wrap wrap--narrow">' +
+          '<p class="eyebrow eyebrow--dark reveal">Reseñas</p>' +
+          '<h2 class="h2 reveal" id="reviews-title" style="--i:1">Lo que dicen quienes lo probaron</h2>' +
+          '<div class="reviews__slot" id="reviews-slot"></div>' +
+        '</div>' +
+      '</section>' : '') +
 
       // h. FAQ
       '<section class="sec sec--light" aria-labelledby="faq-title">' +
@@ -881,6 +900,7 @@
     setupParallax();
     setupStages();
     setupCountdowns();
+    mountReviews();
     onScroll();
 
     if (opts.focus) {
