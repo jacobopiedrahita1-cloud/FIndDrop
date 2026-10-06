@@ -12,7 +12,11 @@
   var progressBar = document.getElementById('progress-bar');
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+  // Cambia con cada versión: la pantalla #/diagnostico la muestra para saber si el navegador tiene la última.
+  var VERSION = '2026-10-06.3';
+
   var state = { view: null, homeScroll: 0, shop: {} };
+  var shopReady = {}; // promesa por producto mientras se cargan los datos de Shopify
   var cleanups = [];
 
   /* ---------- utilidades ---------- */
@@ -637,7 +641,7 @@
     return '<section class="sec sec--light page-shell"><div class="wrap wrap--narrow">' +
       '<p class="eyebrow eyebrow--dark">Solo para ti</p>' +
       '<h1 class="h2" tabindex="-1">Diagnóstico de Shopify</h1>' +
-      '<p class="diag__where">Tienda: <b>' + esc(DATA.shopify.domain) + '</b> · Página abierta en: <b>' + esc(location.origin) + '</b></p>' +
+      '<p class="diag__where">Tienda: <b>' + esc(DATA.shopify.domain) + '</b> · Página abierta en: <b>' + esc(location.origin) + '</b> · Versión: <b>' + VERSION + '</b></p>' +
       '<ol class="diag" id="diag"></ol>' +
       '<p class="diag__help">Toma un pantallazo de esta lista y mándaselo a quien te ayuda con la tienda.</p>' +
     '</div></section>';
@@ -732,7 +736,7 @@
   function loadShopify() {
     DATA.products.forEach(function (p) {
       if (!p.shopifyHandle || isDato(p.shopifyHandle) || !DATA.shopify.storefrontToken) return;
-      storefront(
+      shopReady[p.slug] = storefront(
         'query($h:String!){product(handle:$h){availableForSale variants(first:1){nodes{id availableForSale price{amount currencyCode} compareAtPrice{amount}}}}}',
         { h: p.shopifyHandle }
       ).then(function (d) {
@@ -746,7 +750,8 @@
         refreshPrices(p.slug);
         loadInventory(p);
         if (!v.availableForSale) markSoldOut(p.slug);
-      }).catch(function (e) { console.warn('[FindDrop] Shopify:', e.message); });
+      }).catch(function (e) { console.warn('[FindDrop] Shopify:', e.message); })
+        .then(function () { shopReady[p.slug] = null; });
     });
   }
 
@@ -774,6 +779,18 @@
     var label = btn.querySelector('.btn__label'), original = label.textContent;
     var fallback = safeUrl(p.buyUrl);
 
+    // Si todavía están llegando los datos de Shopify, espera (máx. 6 s) en vez de irse a WhatsApp.
+    if (!shop && shopReady[slug]) {
+      btn.disabled = true; label.textContent = 'Abriendo pago…';
+      var wait = shopReady[slug];
+      Promise.race([wait, new Promise(function (r) { setTimeout(r, 6000); })]).then(function () {
+        if (shopReady[slug] === wait) shopReady[slug] = null; // no esperar dos veces
+        btn.disabled = false; label.textContent = original;
+        buy(slug, btn);
+      });
+      return;
+    }
+
     if (shop && shop.variantId) {
       btn.disabled = true; label.textContent = 'Abriendo pago…';
       storefront(
@@ -785,9 +802,11 @@
         window.location.href = c.cart.checkoutUrl;
       }).catch(function (e) {
         btn.disabled = false; label.textContent = original;
-        if (fallback) window.location.href = fallback;
-        else toast('No pudimos abrir el pago. Intenta de nuevo en un momento.');
         console.warn('[FindDrop] checkout:', e.message);
+        if (fallback) {
+          toast('No pudimos abrir el pago en línea. Te llevamos a WhatsApp para tomar tu pedido.');
+          setTimeout(function () { window.open(fallback, '_blank', 'noopener'); }, 1200);
+        } else toast('No pudimos abrir el pago. Intenta de nuevo en un momento.');
       });
       return;
     }
