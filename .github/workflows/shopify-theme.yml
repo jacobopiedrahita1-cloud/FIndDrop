@@ -23,6 +23,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      # Shopify guarda en config/settings_data.json lo que se activa desde el editor de temas
+      # (por ejemplo el App embed de Judge.me). Se conserva antes de regenerar la rama.
+      - name: Conservar la configuración guardada desde Shopify
+        run: |
+          if git fetch --depth 1 origin shopify-theme; then
+            git show FETCH_HEAD:config/settings_data.json > shopify/theme/config/settings_data.json || true
+          fi
       - name: Generar tema
         run: python3 shopify/build_theme.py
       - name: Publicar en la rama shopify-theme
