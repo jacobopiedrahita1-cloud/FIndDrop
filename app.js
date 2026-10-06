@@ -702,7 +702,8 @@
         v.availableForSale ? '' : 'Revisa el inventario: si "Hacer seguimiento" está activo, la cantidad debe ser mayor que 0.');
       raw('query($h:String!){ product(handle:$h){ variants(first:1){ nodes { quantityAvailable } } } }', { h: p.shopifyHandle }).then(function (r2) {
         var q = r2.json && r2.json.data && r2.json.data.product && r2.json.data.product.variants.nodes[0].quantityAvailable;
-        if (typeof q === 'number') row(true, 'Inventario visible: ' + q + ' unidades', q <= ((p.stock && p.stock.lowAt) || 20) ? 'Se mostrará "Quedan ' + q + ' unidades".' : 'Se mostrará el aviso cuando queden ' + ((p.stock && p.stock.lowAt) || 20) + ' o menos.');
+        if (typeof q === 'number' && q <= 0) row(false, 'Inventario en 0 unidades', 'Por eso la página muestra "Agotado por ahora". En el producto de Shopify, en Inventario, pon la cantidad real que tienes y guarda.');
+        else if (typeof q === 'number') row(true, 'Inventario visible: ' + q + ' unidades', q <= ((p.stock && p.stock.lowAt) || 20) ? 'Se mostrará "Quedan ' + q + ' unidades".' : 'Se mostrará el aviso cuando queden ' + ((p.stock && p.stock.lowAt) || 20) + ' o menos.');
         else row('warn', 'No se puede leer el inventario', 'Es opcional. Para "Quedan N unidades" automático, en tu app activa el permiso de Storefront "unauthenticated_read_product_inventory" (Leer inventario de productos). Mientras tanto se usa stock.manual de data.js.');
       });
       return raw('mutation($l:[CartLineInput!]!){ cartCreate(input:{lines:$l}){ cart{ checkoutUrl } userErrors{ message } } }', { l: [{ merchandiseId: v.id, quantity: 1 }] });
