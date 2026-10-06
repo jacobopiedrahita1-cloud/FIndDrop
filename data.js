@@ -87,7 +87,7 @@ window.FINDDROP = {
       stock: { manual: null, lowAt: 20 },
       promoEndsAt: null, // ej. '2026-10-12T23:59:00-05:00'
       payment: 'Contra entrega o pago en línea',
-      shopifyHandle: '[DATO: handle del producto en Shopify, ej. lullabites]',
+      shopifyHandle: 'lullabites', // debe coincidir con el "Identificador de URL" del producto en Shopify
       // Respaldo si no usas Shopify: enlace de pago o WhatsApp,
       // ej. https://wa.me/573001234567?text=Hola,%20quiero%20LullaBites
       buyUrl: 'https://wa.me/573177484090?text=Hola%2C%20quiero%20pedir%20LullaBites',
