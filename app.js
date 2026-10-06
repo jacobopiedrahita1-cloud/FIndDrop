@@ -212,10 +212,10 @@
         '</div>' +
         '<div><h2 class="footer__h">Contacto</h2><ul class="footer__list">' +
           link(mail, 'Correo', b.contact.email) +
-          link(wa, 'WhatsApp', b.contact.whatsapp) +
+          link(wa, 'WhatsApp', b.contact.whatsappDisplay || b.contact.whatsapp) +
         '</ul></div>' +
         '<div><h2 class="footer__h">Redes</h2><ul class="footer__list">' +
-          b.social.map(function (s) { return link(s.url, s.label, isDato(s.url) ? s.url : s.url.replace(/^https?:\/\/(www\.)?/, '')); }).join('') +
+          b.social.map(function (s) { return link(s.url, s.label, isDato(s.url) ? s.url : s.handle || s.url.replace(/^https?:\/\/(www\.)?/, '')); }).join('') +
         '</ul></div>' +
       '</div>' +
       (view === 'product' ? '<div class="wrap"><p class="footer__legal">' + esc(DATA.legal) + '</p></div>' : '') +

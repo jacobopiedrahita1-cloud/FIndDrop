@@ -18,13 +18,14 @@ window.FINDDROP = {
     idea: 'Encuentra algo bueno cada semana',
     slogan: 'Un hallazgo por semana',
     contact: {
-      email: '[DATO: correo de contacto]',
-      // Solo números, con código de país. Ej: 573001234567
-      whatsapp: '[DATO: número de WhatsApp]'
+      email: 'findroppp@gmail.com',
+      // Solo números, con código de país (57 = Colombia).
+      whatsapp: '573177484090',
+      whatsappDisplay: '+57 317 748 4090'
     },
     social: [
-      { label: 'Instagram', url: '[DATO: enlace de Instagram]' },
-      { label: 'TikTok', url: '[DATO: enlace de TikTok]' }
+      { label: 'Instagram', url: 'https://www.instagram.com/finddropo/', handle: '@finddropo' },
+      { label: 'TikTok', url: 'https://www.tiktok.com/@finddroppp', handle: '@finddroppp' }
     ]
   },
 
@@ -85,11 +86,11 @@ window.FINDDROP = {
          - promoEndsAt: fecha y hora reales en que termina el descuento (hora de Colombia, -05:00). */
       stock: { manual: null, lowAt: 20 },
       promoEndsAt: null, // ej. '2026-10-12T23:59:00-05:00'
-      payment: 'Pago contra entrega',
+      payment: 'Contra entrega o pago en línea',
       shopifyHandle: '[DATO: handle del producto en Shopify, ej. lullabites]',
       // Respaldo si no usas Shopify: enlace de pago o WhatsApp,
       // ej. https://wa.me/573001234567?text=Hola,%20quiero%20LullaBites
-      buyUrl: '[DATO: enlace de compra o WhatsApp]',
+      buyUrl: 'https://wa.me/573177484090?text=Hola%2C%20quiero%20pedir%20LullaBites',
       cta: 'Pídelo aquí',
 
       images: {
@@ -179,7 +180,7 @@ window.FINDDROP = {
           title: 'El hallazgo de la semana',
           text: 'Lo elegimos, lo probamos y te lo mostramos. Si te late, este es el momento.',
           rows: [
-            { label: 'Pago', value: 'Contra entrega: pagas cuando el pedido llega a tu casa.' },
+            { label: 'Pago', value: 'Contra entrega, cuando el pedido llega a tu casa, o en línea con tarjeta o PSE a través de Bold.' },
             { label: 'Envío', value: '[DATO: ciudades, tiempos y costo de envío]' }
           ]
         },
@@ -204,7 +205,7 @@ window.FINDDROP = {
             },
             {
               q: '¿Cómo pago y cuánto tarda en llegar?',
-              a: 'Pagas contra entrega, cuando el pedido llega a tu casa. Envío: [DATO: ciudades, tiempos y costo]'
+              a: 'Tú eliges: contra entrega, cuando el pedido llega a tu casa, o en línea con tarjeta o PSE a través de Bold. Envío: [DATO: ciudades, tiempos y costo]'
             }
           ]
         },
