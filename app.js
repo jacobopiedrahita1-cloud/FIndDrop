@@ -78,6 +78,54 @@
     '</span>';
   }
 
+  /* Unidades disponibles, fin de la promo y forma de pago. Solo muestra datos reales:
+     inventario de Shopify o el número de data.js, y la fecha real de fin de la promo. */
+  function urgencyHtml(p, extra) {
+    var shop = state.shop[p.slug] || {};
+    var units = typeof shop.qty === 'number' ? shop.qty : p.stock && p.stock.manual;
+    var lowAt = (p.stock && p.stock.lowAt) || 20;
+    var ends = p.promoEndsAt ? new Date(p.promoEndsAt) : null;
+    var out = '';
+    if (typeof units === 'number' && units > 0 && units <= lowAt) {
+      out += '<div class="urg urg--stock"><p><span class="urg__pulse" aria-hidden="true"></span>' +
+        (units === 1 ? 'Queda <b>1 unidad</b>' : 'Quedan <b>' + units + ' unidades</b>') + '</p>' +
+        '<span class="urg__bar" aria-hidden="true"><span style="transform:scaleX(' + Math.max(0.06, units / lowAt).toFixed(3) + ')"></span></span></div>';
+    }
+    if (ends && !isNaN(ends) && ends > new Date()) {
+      out += '<p class="urg urg--time">La promo termina en <b data-countdown="' + ends.toISOString() + '">' + countdownText(ends - new Date()) + '</b></p>';
+    }
+    if (p.payment) out += '<p class="urg urg--cod">' + icon('i-check') + esc(p.payment) + '</p>';
+    return '<div class="urgency ' + (extra || '') + '" data-urgency="' + p.slug + '">' + out + '</div>';
+  }
+
+  function countdownText(ms) {
+    var s = Math.max(0, Math.floor(ms / 1000));
+    var d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    function two(n) { return (n < 10 ? '0' : '') + n; }
+    return d > 0 ? d + ' d ' + h + ' h ' + two(m) + ' min' : h + ' h ' + two(m) + ' min ' + two(sec) + ' s';
+  }
+
+  function setupCountdowns() {
+    if (!app.querySelector('[data-countdown]')) return;
+    var timer = setInterval(function () {
+      document.querySelectorAll('[data-countdown]').forEach(function (el) {
+        var left = new Date(el.getAttribute('data-countdown')) - new Date();
+        if (left <= 0) { var row = el.closest('.urg'); if (row) row.remove(); return; }
+        el.textContent = countdownText(left);
+      });
+    }, 1000);
+    cleanups.push(function () { clearInterval(timer); });
+  }
+
+  function refreshUrgency(slug) {
+    var p = findProduct(slug);
+    document.querySelectorAll('[data-urgency="' + slug + '"]').forEach(function (el) {
+      var tmp = document.createElement('div');
+      tmp.innerHTML = urgencyHtml(p);
+      el.innerHTML = tmp.firstChild.innerHTML;
+    });
+  }
+
   function refreshPrices(slug) {
     var p = findProduct(slug);
     document.querySelectorAll('[data-price="' + slug + '"]').forEach(function (el) {
@@ -282,6 +330,7 @@
           '<div class="p-hero__body">' +
             '<p class="lead reveal" style="--i:3">' + t(s.hero.text) + '</p>' +
             '<div class="buyrow reveal" style="--i:4">' + priceHtml(p) + buyBtn(p) + '</div>' +
+            urgencyHtml(p, 'reveal" style="--i:5') +
           '</div>' +
         '</div>' +
       '</section>' +
@@ -377,9 +426,6 @@
                 '<p class="blend__note">' + t(s.ingredients.blendNote) + '</p>' +
               '</div>' +
             '</div>' +
-            '<dl class="details">' + s.ingredients.details.map(function (d, i) {
-              return '<div class="reveal" style="--i:' + (i + 2) + '"><dt>' + esc(d.label) + '</dt><dd>' + t(d.value) + '</dd></div>';
-            }).join('') + '</dl>' +
           '</div>' +
         '</div>' +
       '</section>' +
@@ -398,6 +444,7 @@
                 return '<div><dt>' + esc(r.label) + '</dt><dd>' + t(r.value) + '</dd></div>';
               }).join('') + '</dl>' +
               '<div class="buyrow">' + priceHtml(p) + buyBtn(p) + '</div>' +
+              urgencyHtml(p) +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -426,6 +473,7 @@
           '<h2 class="h2 h2--xl reveal" id="final-title" style="--i:1">' + esc(s.final.title) + '</h2>' +
           '<p class="lead reveal" style="--i:2">' + t(s.final.text) + '</p>' +
           '<div class="buyrow buyrow--center reveal" style="--i:3">' + priceHtml(p) + buyBtn(p, 'Pídelo aquí', 'btn--lg') + '</div>' +
+          urgencyHtml(p, 'urgency--center reveal" style="--i:3') +
           '<a href="#/" class="back back--inline reveal" style="--i:4">' + icon('i-back') + '<span>Volver a la tienda</span></a>' +
         '</div>' +
       '</section>';
@@ -557,7 +605,7 @@
 
   // Barra de compra fija: aparece al pasar el hero, se oculta en la oferta y el cierre.
   function setupBuybar(p) {
-    buybar.innerHTML = '<div class="buybar__inner"><div class="buybar__info"><span class="buybar__name">' + esc(p.name) + '</span>' +
+    buybar.innerHTML = '<div class="buybar__inner"><div class="buybar__info"><span class="buybar__name">' + esc(p.payment || p.name) + '</span>' +
       priceHtml(p, true) + '</div>' + buyBtn(p, p.cta, 'btn--sm') + '</div>';
     if (!('IntersectionObserver' in window)) return;
     var hero = document.getElementById('p-hero');
@@ -609,9 +657,22 @@
           compareAt: v.compareAtPrice ? parseFloat(v.compareAtPrice.amount) : null
         };
         refreshPrices(p.slug);
+        loadInventory(p);
         if (!v.availableForSale) markSoldOut(p.slug);
       }).catch(function (e) { console.warn('[FindDrop] Shopify:', e.message); });
     });
+  }
+
+  // El inventario necesita el permiso "unauthenticated_read_product_inventory" en el token de Storefront.
+  // Si no lo tiene, se usa stock.manual de data.js sin romper el resto.
+  function loadInventory(p) {
+    storefront('query($h:String!){product(handle:$h){variants(first:1){nodes{quantityAvailable}}}}', { h: p.shopifyHandle })
+      .then(function (d) {
+        var v = d.product && d.product.variants.nodes[0];
+        if (!v || typeof v.quantityAvailable !== 'number') return;
+        state.shop[p.slug].qty = v.quantityAvailable;
+        refreshUrgency(p.slug);
+      }).catch(function () {});
   }
 
   function markSoldOut(slug) {
@@ -706,6 +767,7 @@
     setupCounters();
     setupParallax();
     setupStages();
+    setupCountdowns();
     onScroll();
 
     if (opts.focus) {

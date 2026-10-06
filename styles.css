@@ -435,6 +435,27 @@ body:not([data-view="product"]) .progress { display: none; }
 .badges .icon { width: 16px; height: 16px; color: var(--coral); }
 .ing__grid { display: grid; gap: 28px; margin-top: 34px; }
 .ing__col { display: grid; gap: 20px; align-content: start; }
+
+/* ---------- urgencia real: unidades, fin de promo, pago ---------- */
+.urgency { display: grid; gap: 10px; margin-top: 18px; max-width: 420px; }
+.urgency--center { margin-left: auto; margin-right: auto; justify-items: center; }
+.urgency:empty { display: none; }
+.urg { font-size: .98rem; margin: 0; }
+.urg b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.urg--stock p { display: flex; align-items: center; gap: 10px; color: var(--coral); }
+.urg__pulse { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--coral); flex: none; }
+.urg__pulse::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--coral);
+  animation: pulse 1.8s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+}
+@keyframes pulse { from { transform: scale(1); opacity: .6; } to { transform: scale(3); opacity: 0; } }
+.urg__bar { display: block; height: 4px; margin-top: 8px; border-radius: 999px; background: rgba(244,241,247,.14); overflow: hidden; }
+.urg__bar span { display: block; height: 100%; background: var(--coral); transform-origin: 0 50%; }
+.urgency--center .urg__bar { width: 260px; max-width: 100%; }
+.urg--time { color: var(--lilac); }
+.urg--time b { color: var(--pink); }
+.urg--cod { display: inline-flex; align-items: center; gap: 8px; color: var(--mist); }
+.urg--cod .icon { width: 18px; height: 18px; padding: 3px; border-radius: 50%; background: rgba(233,128,116,.2); color: var(--coral); }
 .nutri, .blend { padding: 20px; border-radius: var(--r-md); background: rgba(68,49,141,.07); }
 .nutri__title { font-size: 1.15rem; font-weight: 600; }
 .nutri__serving { color: var(--purple); font-size: .95rem; margin-top: 2px; padding-bottom: 10px; border-bottom: 2px solid var(--night); }
@@ -587,7 +608,7 @@ body:not([data-view="product"]) .progress { display: none; }
   .contents__grid { grid-template-columns: 1fr 1.1fr; gap: 64px; }
   .usage__steps { grid-template-columns: repeat(3, 1fr); }
   .checks { grid-template-columns: 1fr 1fr; gap: 16px 28px; }
-  .ing__grid { grid-template-columns: 1.2fr 1fr; gap: 48px; }
+  .ing__col { grid-template-columns: 1.2fr 1fr; gap: 24px; }
   .offer__card { grid-template-columns: 1fr 1.15fr; align-items: center; padding: 40px; gap: 32px; }
   .buybar { display: none; }
 }

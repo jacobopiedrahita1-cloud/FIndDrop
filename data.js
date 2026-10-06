@@ -77,6 +77,15 @@ window.FINDDROP = {
       price: 79900,
       compareAt: 99900, // precio anterior (tachado). Pon null si no hay descuento.
       currency: 'COP',
+
+      /* Urgencia con datos REALES. No pongas números inventados: es publicidad engañosa
+         (Estatuto del Consumidor, Ley 1480 de 2011). Si un dato no aplica, déjalo en null y no se muestra.
+         - stock.manual: unidades disponibles hoy. Si conectas Shopify con inventario, se usa el de Shopify.
+         - stock.lowAt: desde cuántas unidades se muestra "Quedan N unidades".
+         - promoEndsAt: fecha y hora reales en que termina el descuento (hora de Colombia, -05:00). */
+      stock: { manual: null, lowAt: 20 },
+      promoEndsAt: null, // ej. '2026-10-12T23:59:00-05:00'
+      payment: 'Pago contra entrega',
       shopifyHandle: '[DATO: handle del producto en Shopify, ej. lullabites]',
       // Respaldo si no usas Shopify: enlace de pago o WhatsApp,
       // ej. https://wa.me/573001234567?text=Hola,%20quiero%20LullaBites
@@ -162,21 +171,16 @@ window.FINDDROP = {
           blendTitle: 'Mezcla de hierbas y aminoácidos',
           blend: ['L-teanina', '5-HTP (5-hidroxitriptófano)', 'Extracto de raíz de valeriana', 'Extracto de pasiflora'],
           blendNote: 'Es una fórmula patentada: el fabricante no publica la cantidad de cada uno.',
-          badges: ['Sin melatonina', 'Vegana', 'Sin azúcar', 'Sin gluten', 'Apta halal'],
-          details: [
-            { label: 'Otros ingredientes', value: '[DATO: lista de "Other ingredients" tal como aparece en la etiqueta]' },
-            { label: 'Registro sanitario', value: '[DATO: número de registro sanitario]' },
-            { label: 'Fabricante / origen', value: '[DATO: fabricante y país de origen]' },
-            { label: 'Advertencias de la etiqueta', value: '[DATO: advertencias tal como aparecen en la etiqueta]' }
-          ]
+          // Recuerda: verifica el registro sanitario (INVIMA) antes de vender en Colombia.
+          badges: ['Sin melatonina', 'Vegana', 'Sin azúcar', 'Sin gluten', 'Apta halal']
         },
         offer: {
           eyebrow: 'Esta semana',
           title: 'El hallazgo de la semana',
           text: 'Lo elegimos, lo probamos y te lo mostramos. Si te late, este es el momento.',
           rows: [
-            { label: 'Disponibilidad', value: '[DATO: disponibilidad, ej. unidades o fecha límite]' },
-            { label: 'Envío', value: '[DATO: países, tiempos y costo de envío]' }
+            { label: 'Pago', value: 'Contra entrega: pagas cuando el pedido llega a tu casa.' },
+            { label: 'Envío', value: '[DATO: ciudades, tiempos y costo de envío]' }
           ]
         },
         faq: {
@@ -199,8 +203,8 @@ window.FINDDROP = {
               a: 'Si estás en embarazo o lactancia, tomas medicamentos (en especial antidepresivos) o tienes alguna condición de salud, consulta antes con un profesional.'
             },
             {
-              q: '¿Cuánto tarda en llegar?',
-              a: '[DATO: tiempos y zonas de envío]'
+              q: '¿Cómo pago y cuánto tarda en llegar?',
+              a: 'Pagas contra entrega, cuando el pedido llega a tu casa. Envío: [DATO: ciudades, tiempos y costo]'
             }
           ]
         },
