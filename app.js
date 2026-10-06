@@ -630,6 +630,92 @@
 
   /* ---------- Shopify ---------- */
 
+  /* ---------- diagnóstico de la conexión con Shopify (#/diagnostico) ----------
+     Página oculta: revisa token, producto, canal de venta, precio, inventario y pago,
+     y dice en palabras simples qué falta. */
+  function diagView() {
+    return '<section class="sec sec--light page-shell"><div class="wrap wrap--narrow">' +
+      '<p class="eyebrow eyebrow--dark">Solo para ti</p>' +
+      '<h1 class="h2" tabindex="-1">Diagnóstico de Shopify</h1>' +
+      '<p class="diag__where">Tienda: <b>' + esc(DATA.shopify.domain) + '</b> · Página abierta en: <b>' + esc(location.origin) + '</b></p>' +
+      '<ol class="diag" id="diag"></ol>' +
+      '<p class="diag__help">Toma un pantallazo de esta lista y mándaselo a quien te ayuda con la tienda.</p>' +
+    '</div></section>';
+  }
+
+  function runDiag() {
+    var list = document.getElementById('diag');
+    function row(ok, title, detail) {
+      var li = document.createElement('li');
+      li.className = 'diag__row diag__row--' + (ok === true ? 'ok' : ok === 'warn' ? 'warn' : 'bad');
+      li.innerHTML = '<span class="diag__mark" aria-hidden="true">' + (ok === true ? '✓' : ok === 'warn' ? '!' : '✕') + '</span>' +
+        '<div><b>' + esc(title) + '</b>' + (detail ? '<p>' + esc(detail) + '</p>' : '') + '</div>';
+      list.appendChild(li);
+    }
+    function raw(query, variables) {
+      var s = DATA.shopify;
+      return fetch('https://' + s.domain + '/api/' + s.apiVersion + '/graphql.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Shopify-Storefront-Access-Token': s.storefrontToken },
+        body: JSON.stringify({ query: query, variables: variables || {} })
+      }).then(function (r) {
+        return r.text().then(function (txt) {
+          var j = null; try { j = JSON.parse(txt); } catch (e) {}
+          return { status: r.status, json: j, text: txt };
+        });
+      });
+    }
+    function errText(res) {
+      var e = res.json && res.json.errors;
+      if (!e) return 'HTTP ' + res.status;
+      return typeof e === 'string' ? e : e.map(function (x) { return x.message; }).join(' · ');
+    }
+    var p = findProduct(DATA.featured) || DATA.products[0];
+
+    raw('{ shop { name } }').then(function (res) {
+      if (res.status === 401 || res.status === 403) {
+        row(false, 'El token de Storefront no es válido', 'Shopify respondió ' + res.status + ': ' + errText(res) + '. Revisa en Shopify > Configuración > Apps y canales de venta > Desarrollar apps > tu app > Credenciales de API que el "token de acceso a la API de Storefront" sea el mismo que está en data.js (shopify.storefrontToken).');
+        throw 'stop';
+      }
+      if (!res.json || !res.json.data || !res.json.data.shop) {
+        row(false, 'Shopify respondió con un error', errText(res));
+        throw 'stop';
+      }
+      row(true, 'Conexión con la tienda "' + res.json.data.shop.name + '"', 'El token de Storefront funciona.');
+      return raw('query($h:String!){ product(handle:$h){ title availableForSale variants(first:1){ nodes { id availableForSale price{amount currencyCode} compareAtPrice{amount} } } } }', { h: p.shopifyHandle });
+    }).then(function (res) {
+      var prod = res.json && res.json.data && res.json.data.product;
+      if (!prod) {
+        row(false, 'No se encuentra el producto "' + p.shopifyHandle + '"',
+          'Puede ser una de tres cosas: (1) el producto no existe todavía; (2) su "Identificador de URL" no es exactamente "' + p.shopifyHandle + '" (está al final del producto, en "Publicación en motores de búsqueda"); (3) el producto no está activo en el canal de venta de la app del token. En el producto, mira "Canales de venta": debe estar marcado Tienda online Y la app/Headless del token. También el estado del producto debe ser "Activo", no "Borrador".');
+        throw 'stop';
+      }
+      row(true, 'Producto encontrado: ' + prod.title);
+      var v = prod.variants.nodes[0];
+      var price = parseFloat(v.price.amount), before = v.compareAtPrice ? parseFloat(v.compareAtPrice.amount) : null;
+      row(price === p.price ? true : 'warn', 'Precio en Shopify: ' + price + ' ' + v.price.currencyCode,
+        price === p.price ? 'Coincide con la página.' : 'La página va a mostrar el precio de Shopify, no el de data.js (' + p.price + '). Si no es el que quieres, cámbialo en el producto.');
+      row(before ? true : 'warn', before ? 'Precio de comparación: ' + before : 'Sin precio de comparación',
+        before ? 'Se mostrará tachado con el ahorro.' : 'Si quieres mostrar el descuento, pon 99900 en "Precio de comparación" del producto.');
+      if (v.price.currencyCode !== 'COP') row('warn', 'La moneda de la tienda es ' + v.price.currencyCode, 'Para vender en pesos colombianos, cambia la moneda en Configuración > Detalles de la tienda.');
+      row(v.availableForSale ? true : false, v.availableForSale ? 'Disponible para la venta' : 'El producto aparece agotado',
+        v.availableForSale ? '' : 'Revisa el inventario: si "Hacer seguimiento" está activo, la cantidad debe ser mayor que 0.');
+      raw('query($h:String!){ product(handle:$h){ variants(first:1){ nodes { quantityAvailable } } } }', { h: p.shopifyHandle }).then(function (r2) {
+        var q = r2.json && r2.json.data && r2.json.data.product && r2.json.data.product.variants.nodes[0].quantityAvailable;
+        if (typeof q === 'number') row(true, 'Inventario visible: ' + q + ' unidades', q <= ((p.stock && p.stock.lowAt) || 20) ? 'Se mostrará "Quedan ' + q + ' unidades".' : 'Se mostrará el aviso cuando queden ' + ((p.stock && p.stock.lowAt) || 20) + ' o menos.');
+        else row('warn', 'No se puede leer el inventario', 'Es opcional. Para "Quedan N unidades" automático, en tu app activa el permiso de Storefront "unauthenticated_read_product_inventory" (Leer inventario de productos). Mientras tanto se usa stock.manual de data.js.');
+      });
+      return raw('mutation($l:[CartLineInput!]!){ cartCreate(input:{lines:$l}){ cart{ checkoutUrl } userErrors{ message } } }', { l: [{ merchandiseId: v.id, quantity: 1 }] });
+    }).then(function (res) {
+      var c = res.json && res.json.data && res.json.data.cartCreate;
+      if (c && c.cart) row(true, 'El botón de compra abre el pago de Shopify', 'Todo listo: "Pídelo aquí" lleva al checkout con contra entrega y Bold.');
+      else row(false, 'No se pudo crear el carrito', (c && c.userErrors.length ? c.userErrors.map(function (e) { return e.message; }).join(' · ') : errText(res)) + '. Revisa que la app tenga los permisos de Storefront para carritos (unauthenticated_write_checkouts / unauthenticated_read_checkouts).');
+    }).catch(function (e) {
+      if (e === 'stop') return;
+      row(false, 'No hay conexión con Shopify desde esta página', 'El navegador no pudo hablar con ' + DATA.shopify.domain + ' (' + (e && e.message || e) + '). Revisa tu internet o que el dominio de la tienda en data.js sea correcto.');
+    });
+  }
+
   function storefront(query, variables) {
     var s = DATA.shopify;
     return fetch('https://' + s.domain + '/api/' + s.apiVersion + '/graphql.json', {
@@ -728,6 +814,7 @@
     var h = location.hash;
     if (h.indexOf('#/') !== 0) return null;
     var slug = decodeURIComponent(h.slice(2)).replace(/\/$/, '');
+    if (slug === 'diagnostico') return { view: 'diag' };
     return slug && findProduct(slug) ? { view: 'product', p: findProduct(slug) } : { view: 'home' };
   }
 
@@ -741,7 +828,13 @@
     state.view = route.view;
     document.body.setAttribute('data-view', route.view);
 
-    if (route.view === 'product') {
+    if (route.view === 'diag') {
+      app.innerHTML = diagView();
+      document.title = 'Diagnóstico · FindDrop';
+      renderNav('home');
+      buybar.innerHTML = '';
+      runDiag();
+    } else if (route.view === 'product') {
       app.innerHTML = productView(route.p);
       document.title = route.p.name + ' · FindDrop';
       renderNav('product', route.p);

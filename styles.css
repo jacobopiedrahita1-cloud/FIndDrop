@@ -649,3 +649,14 @@ body:not([data-view="product"]) .progress { display: none; }
 .rte { max-width: 65ch; }
 .rte img { border-radius: var(--r-md); }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- diagnóstico (#/diagnostico) ---------- */
+.diag__where { color: var(--purple); font-size: .95rem; word-break: break-word; }
+.diag { display: grid; gap: 10px; margin-top: 18px; }
+.diag__row { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: var(--r-sm); background: rgba(68,49,141,.07); }
+.diag__row p { margin-top: 4px; color: var(--purple); font-size: .95rem; }
+.diag__mark { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-weight: 600; color: var(--lilac); }
+.diag__row--ok .diag__mark { background: var(--purple); }
+.diag__row--warn .diag__mark { background: var(--coral); color: var(--night); }
+.diag__row--bad .diag__mark { background: var(--pink); }
+.diag__help { margin-top: 20px; color: var(--purple); font-size: .95rem; }
