@@ -1,0 +1,15 @@
+<h1 class="h2">Buscar</h1>
+<form action="{{ routes.search_url }}" method="get" role="search" class="page-form">
+  <label class="visually-hidden" for="q">Buscar</label>
+  <input id="q" type="search" name="q" value="{{ search.terms | escape }}" placeholder="¿Qué buscas?">
+  <button class="btn btn--pink btn--sm" type="submit">Buscar</button>
+</form>
+{%- if search.performed -%}
+  <ul class="page-list">
+    {%- for item in search.results -%}
+      <li><a href="{{ item.url }}">{{ item.title }}</a></li>
+    {%- else -%}
+      <li>No encontramos resultados.</li>
+    {%- endfor -%}
+  </ul>
+{%- endif -%}

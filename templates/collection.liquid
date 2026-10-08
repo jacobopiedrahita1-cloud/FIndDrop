@@ -1,0 +1,11 @@
+<h1 class="h2">{{ collection.title }}</h1>
+{%- paginate collection.products by 24 -%}
+  <ul class="page-list">
+    {%- for product in collection.products -%}
+      <li><a href="{{ product.url }}">{{ product.title }}</a> · {{ product.price | money }}</li>
+    {%- else -%}
+      <li>Aún no hay productos aquí.</li>
+    {%- endfor -%}
+  </ul>
+  {{- paginate | default_pagination -}}
+{%- endpaginate -%}

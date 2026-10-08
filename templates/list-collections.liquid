@@ -1,0 +1,6 @@
+<h1 class="h2">Colecciones</h1>
+<ul class="page-list">
+  {%- for collection in collections -%}
+    <li><a href="{{ collection.url }}">{{ collection.title }}</a></li>
+  {%- endfor -%}
+</ul>

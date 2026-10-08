@@ -1,0 +1,17 @@
+{%- assign variant = product.selected_or_first_available_variant -%}
+<p class="eyebrow eyebrow--dark">Hallazgo FindDrop</p>
+<h1 class="h2">{{ product.title }}</h1>
+{%- if product.featured_image -%}
+  <img class="page-img" src="{{ product.featured_image | image_url: width: 900 }}" alt="{{ product.featured_image.alt | escape }}" width="900" height="{{ 900 | divided_by: product.featured_image.aspect_ratio | round }}" loading="lazy">
+{%- endif -%}
+<p class="price">{{ variant.price | money }}</p>
+{%- form 'product', product, class: 'page-form' -%}
+  <input type="hidden" name="id" value="{{ variant.id }}">
+  <input type="hidden" name="return_to" value="/checkout">
+  <button class="btn btn--pink" type="submit"{% unless product.available %} disabled{% endunless %}>
+    {%- if product.available -%}Pídelo aquí{%- else -%}Agotado por ahora{%- endif -%}
+  </button>
+{%- endform -%}
+<div class="rte">{{ product.description }}</div>
+{% render 'judgeme-widget', product: product %}
+<p><a class="page-link" href="{{ routes.root_url }}#/{{ product.handle }}">Ver la historia completa</a></p>

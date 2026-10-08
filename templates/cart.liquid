@@ -1,0 +1,21 @@
+<h1 class="h2">Tu pedido</h1>
+{%- if cart.item_count > 0 -%}
+  <form action="{{ routes.cart_url }}" method="post" class="page-form">
+    <ul class="cart-list">
+      {%- for item in cart.items -%}
+        <li>
+          <span><a href="{{ item.url }}">{{ item.product.title }}</a>{% unless item.variant.title contains 'Default' %} · {{ item.variant.title }}{% endunless %}</span>
+          <label>Cantidad <input type="number" name="updates[]" value="{{ item.quantity }}" min="0" inputmode="numeric"></label>
+          <span>{{ item.final_line_price | money }}</span>
+        </li>
+      {%- endfor -%}
+    </ul>
+    <p class="price">Total: {{ cart.total_price | money }}</p>
+    <div class="buyrow">
+      <button class="btn btn--pink" type="submit" name="checkout">Ir a pagar</button>
+      <button class="page-link page-link--btn" type="submit" name="update">Actualizar</button>
+    </div>
+  </form>
+{%- else -%}
+  <p>Tu carrito está vacío.</p>
+{%- endif -%}
