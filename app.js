@@ -13,7 +13,7 @@
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   // Cambia con cada versión: la pantalla #/diagnostico la muestra para saber si el navegador tiene la última.
-  var VERSION = '2026-10-06.3';
+  var VERSION = '2026-10-08.1';
 
   var state = { view: null, homeScroll: 0, shop: {} };
   var shopReady = {}; // promesa por producto mientras se cargan los datos de Shopify
@@ -584,7 +584,11 @@
       st.y += (st.ty - st.y) * k;
       var rest = Math.abs(st.tx - st.x) < 0.002 && Math.abs(st.ty - st.y) < 0.002;
       if (rest) { st.x = st.tx; st.y = st.ty; }
-      st.jar.style.transform = 'perspective(900px) rotateX(' + (-st.y * st.max).toFixed(2) + 'deg) rotateY(' + (st.x * st.max).toFixed(2) + 'deg)';
+      // El frasco solo se inclina con el mouse. En celular, la inclinación 3D con el scroll
+      // hacía que pareciera agrandarse; ahí solo se mueven las gomitas.
+      if (finePointer.matches) {
+        st.jar.style.transform = 'perspective(900px) rotateX(' + (-st.y * st.max).toFixed(2) + 'deg) rotateY(' + (st.x * st.max).toFixed(2) + 'deg)';
+      }
       for (var i = 0; i < st.gs.length; i++) {
         var d = +st.gs[i].getAttribute('data-g') * 16;
         st.gs[i].style.transform = 'translate3d(' + (st.x * d).toFixed(1) + 'px,' + (st.y * d).toFixed(1) + 'px,0)';
