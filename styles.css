@@ -239,7 +239,9 @@ body:not([data-view="product"]) .progress { display: none; }
 /* ---------- home: productos ---------- */
 .products { padding-top: 32px; }
 .products .sec__head { margin-bottom: 18px; }
-.grid-products { display: grid; gap: 18px; grid-template-columns: 1fr; }
+/* minmax(0, …): la columna nunca toma el ancho de la imagen (en Safari la tarjeta se salía de la pantalla). */
+.grid-products { display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); }
+.grid-products > .card { min-width: 0; }
 
 .card {
   position: relative; border-radius: var(--r-lg);
@@ -251,7 +253,10 @@ body:not([data-view="product"]) .progress { display: none; }
 .card__media {
   position: relative; overflow: hidden;
   border-radius: calc(var(--r-lg) - 6px); margin: 6px;
-  aspect-ratio: 5 / 4;
+  /* Alto fijo según el ancho (80 % = proporción 5:4) y contenido aislado: así nada de adentro
+     puede cambiar el tamaño de la tarjeta. Antes, con aspect-ratio, Safari la iba agrandando al hacer scroll. */
+  height: 0; padding-bottom: 80%;
+  contain: size layout paint;
   background: radial-gradient(120% 90% at 50% 100%, var(--purple), var(--night) 70%);
   display: grid; place-items: center;
 }
@@ -594,7 +599,7 @@ body:not([data-view="product"]) .progress { display: none; }
   .nav__link--hide-sm { display: inline-block; }
   .nav__buy { display: inline-flex; }
   .home-hero { min-height: min(62svh, 600px); }
-  .grid-products { grid-template-columns: 1.6fr 1fr; gap: 22px; }
+  .grid-products { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 22px; }
   .steps { grid-template-columns: repeat(3, 1fr); gap: 18px; }
   .footer__grid { grid-template-columns: 1.4fr 1fr 1fr; }
   .p-hero { padding-bottom: 96px; }
@@ -619,7 +624,7 @@ body:not([data-view="product"]) .progress { display: none; }
 }
 @media (min-width: 1024px) {
   .card--featured .card__link { flex-direction: row; }
-  .card--featured .card__media { flex: 1.1; aspect-ratio: auto; min-height: 360px; }
+  .card--featured .card__media { flex: 1.1; height: auto; padding-bottom: 0; min-height: 360px; contain: layout paint; }
   .card--featured .card__body { flex: 1; padding: 34px 32px; justify-content: center; }
   .card--featured .card__title { font-size: 2.2rem; }
   .card--featured .card__text { font-size: 1.15rem; }

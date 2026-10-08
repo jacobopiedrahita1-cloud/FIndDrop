@@ -13,7 +13,7 @@
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   // Cambia con cada versión: la pantalla #/diagnostico la muestra para saber si el navegador tiene la última.
-  var VERSION = '2026-10-08.2';
+  var VERSION = '2026-10-08.3';
 
   var state = { view: null, homeScroll: 0, shop: {} };
   var shopReady = {}; // promesa por producto mientras se cargan los datos de Shopify
